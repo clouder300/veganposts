@@ -185,7 +185,8 @@
                 // Hier wird das HTML von der Infoseite geparsed
                 ajaxCalls.push(
                     $.ajax({
-                        url: "remote-request.php?url=https%3A%2F%2Fwww.vegan.at%2Finfocenter",
+                        //url: "remote-request.php?url=https%3A%2F%2Fwww.vegan.at%2Finfocenter",
+                        url: "remote-request?url=https%3A%2F%2Fwww.vegan.at%2Finfocenter",
                         type: 'GET',
                         dataType: "html",
                         success: function(res) {

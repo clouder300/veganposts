@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Veganposts</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="icon" href="favicon.png">
+
+        <style>
+            body {
+                margin: 15px;
+                max-width: 1000px;
+            }
+            * {
+                font-family: Arial, Helvetica, sans-serif;
+            }
+            .post {
+                display: flex;
+                margin-bottom: 15px;
+            }
+            .img {
+                min-width: 140px
+            }
+            img {
+                width: 140px;
+            }
+            .content {
+                margin-left: 10px
+            }
+            .title .label {
+                color: #fff;
+                padding: 2px 2px;
+                font-size: 12px;
+            }
+            .title a {
+                word-break: break-word;
+                word-wrap: break-word;
+            }
+            .time {
+                color: gray;
+            }
+            .text {
+                font-size: 12px;
+                margin-top: 5px;
+                word-break: break-word;
+                word-wrap: break-word;
+            }
+            .data {
+                font-size: 14px;
+                margin-top: 5px;
+            }
+            .reddit {
+                background: #ff4500 !important;
+            }
+            .feddit {
+                background: #a32ca7;
+            }
+            .vegpool {
+                background: #80cc28;
+            }
+            .veganat {
+                background: #8dbd4c;
+            }
+            .vegconomist {
+                background: #000000;
+            }
+            .peta {
+                background: #009FE3;
+            }
+            .proveg {
+                background: #147c3f;
+            }
+
+            @media (max-width: 500px) {
+                .post {
+                    flex-wrap: wrap;
+                }
+                .img {
+                    margin-bottom: 5px;
+                }
+                .noimg {
+                    display: none;
+                }
+                .content {
+                    margin-left: 0
+                }
+            }
+        </style>
+
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: 15px; display: block; shape-rendering: auto;" width="200px" height="200px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+            <circle cx="50" cy="50" r="32" stroke-width="5" stroke="#93dbe9" stroke-dasharray="50.26548245743669 50.26548245743669" fill="none" stroke-linecap="round">
+            <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" keyTimes="0;1" values="0 50 50;360 50 50"></animateTransform>
+            </circle>
+        </svg>
+    </head>
+    <body>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment-with-locales.min.js"></script>
+        <script>
+            moment.locale('de');
+
+            function load(){
+                ajaxCalls = []
+                posts = [];
+
+                // Komische Reddit API ohne Auth anzapfen
+                ["vegande", "veganat"].forEach(community => {
+                    ajaxCalls.push(
+                        $.ajax({
+                            url: "https://www.reddit.com/r/" + community + "/new.json?sort=new&limit=30",
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(res) {
+                                console.log(res)
+                                console.log(community);
+                                res['data']['children'].forEach(post => {
+                                    posts.push({
+                                        site: "Reddit" + (community != "vegande" ? " " + capitalizeFirstLetter(community) : ""),
+                                        time: post['data']['created'] * 1000,
+                                        text: post['data']['selftext'],
+                                        title: post['data']['title'],
+                                        thumbnail: post['data']['thumbnail'],
+                                        link: "https://reddit.com" + post['data']['permalink'],
+                                        score: post['data']['score'],
+                                        comments: post['data']['num_comments']
+                                    })
+                                });
+                            }
+                        })
+                    );
+                });
+
+                // Feddit API
+                ["vegan", "kreisvegs"].forEach(community => {
+                    ajaxCalls.push(
+                        $.ajax({
+                            url: "https://feddit.de/api/v3/post/list?community_name=" + community + "&sort=New&limit=30",
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(res) {
+                                console.log(res)
+                                res['posts'].forEach(post => {
+                                    posts.push({
+                                        site: "Feddit" + (community != "vegan" ? " " + capitalizeFirstLetter(community) : ""),
+                                        time: new Date(post['post']['published'] + "+00:00").getTime(),
+                                        text: post['post']['body'],
+                                        title: post['post']['name'],
+                                        thumbnail: post['post']['thumbnail_url'],
+                                        link: "https://feddit.de/post/" + post['post']['id'],
+                                        score: post['counts']['score'],
+                                        comments: post['counts']['comments']
+                                    })
+                                });
+                            }
+                        })
+                    );
+                });
+
+                // Vegpool direkt requesten geht wegen CORS nicht. Deswegen diese Umgehung per PHP
+                // Hier wird der News-RSS-Feed geparsed. Leider sind da die URLs zu den Thumbnails nicht mit drin.
+                ajaxCalls.push(
+                    $.ajax({
+                        url: "remote-request.php?url=https%3A%2F%2Fvegpool.de%2Ffeeds%2Frss_news.xml",
+                        type: 'GET',
+                        dataType: 'xml',
+                        success: function(res) {
+                            $(res).find('item').each(function(){
+                                posts.push({
+                                    site: "Vegpool",
+                                    time: new Date($(this).find("pubDate").text()).getTime(),
+                                    text: $(this).find("description").text(),
+                                    title: $(this).find("title").text(),
+                                    thumbnail: null,
+                                    link: $(this).find("link").text(),
+                                    score: null,
+                                    comments: null
+                                })
+                            })
+                        }
+                    })
+                );
+
+                // Vegan.at direkt requesten geht wegen CORS nicht. Deswegen diese Umgehung per PHP
+                // Hier wird das HTML von der Infoseite geparsed
+                ajaxCalls.push(
+                    $.ajax({
+                        url: "remote-request.php?url=https%3A%2F%2Fwww.vegan.at%2Finfocenter",
+                        type: 'GET',
+                        dataType: "html",
+                        success: function(res) {
+                            $(res).find('.views-row').each(function(){
+                                posts.push({
+                                    site: "Vegan.at",
+                                    time: parseGermanDate($(this).find(".pane-node-created").text()).getTime(),
+                                    text: $(this).find(".field--type-text-with-summary").text(),
+                                    title: $(this).find("h1").text(),
+                                    thumbnail: $(this).find("img").attr("src"),
+                                    link: $(this).find("a").attr("href"),
+                                    score: null,
+                                    comments: null
+                                })
+                            })
+                        }
+                    })
+                );
+
+                // Hier werden Wordpress REST APIs gefetched. _embed damit man an die Thumbnail URLs rankommt.
+                [{url: "vegconomist.de", name: "Vegconomist"}, {url: "www.peta.de", name: "Peta"}, {url: "proveg.com/de", name: "Proveg"}].forEach(site => {
+                    ajaxCalls.push(
+                        $.ajax({
+                            url: "https://" + site.url + "/wp-json/wp/v2/posts?_embed",
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(res) {
+                                console.log(res)
+                                res.forEach(post => {
+                                    posts.push({
+                                        site: site.name,
+                                        time: new Date(post['date']).getTime(),
+                                        text: post['excerpt']['rendered'].replace(/<\/?[^>]+(>|$)/g, "").replace(/\[.*?\]/g, "").replace("mehr", ""),
+                                        title: post['title']['rendered'].replace(/<\/?[^>]+(>|$)/g, "").replace("Sponsored Post ", ""),
+                                        thumbnail: post['_embedded']['wp:featuredmedia'][0]['media_details']?.['sizes']?.['thumbnail']?.['source_url'],
+                                        link: post['link'],
+                                        score: null,
+                                        comments: null
+                                    })
+                                });
+                            }
+                        })
+                    );
+                });
+
+                // Wenn alle asynchronen Requests abgeschlossen sind -> HTML zusammenbauen
+                $.when.apply($, ajaxCalls).then(function(){
+                    posts.sort((a, b) => b.time - a.time);
+                    console.log("Geladen")
+                    console.log(posts)
+
+                    $("body").html("")
+                    posts.forEach(post => {
+                        $("body").append(`
+                            <div class="post">
+                                <div class="img` + (post.thumbnail == undefined || !post.thumbnail.startsWith("http") ? " noimg" : "") + `">
+                                    ` + (post.thumbnail != undefined && post.thumbnail.startsWith("http") ? `
+                                        <img src="` + post.thumbnail +  `">
+                                    ` : "") + `</div>
+                                <div class="content">
+                                    <div class="title">
+                                        <span class="label ` + post.site.toLowerCase().replace(".", "") + `">` + post.site + `</span> <a target="_blank" href=` + post.link + `>` + post.title + `</a> <span class='time'>` + moment(post.time).fromNow() + `</span>
+                                    </div>
+                                    <div class="text">
+                                        ` + (post.text != undefined ? `
+                                            ` + post.text +  `
+                                        ` : "") + `
+                                    </div>
+                                    ` + (post.score == null ? "" : `
+                                        <div class="data">
+                                            ` + post.score + ` Score, ` + post.comments + ` Kommentare
+                                        </div>
+                                    `) + `
+                                </div>
+                            </div>
+                        `)
+                    });
+                })
+            }
+
+            function capitalizeFirstLetter(string) {
+                return string.charAt(0).toUpperCase() + string.slice(1);
+            }
+
+            function parseGermanDate(input) {
+                var parts = input.match(/(\d+)/g);
+                return new Date(parts[2], parts[1]-1, parts[0]);
+            }
+
+            load()
+            // Alle 3 min neu laden
+            setInterval(load, 60 * 3 * 1000);
+        </script>
+    </body>
+</html>

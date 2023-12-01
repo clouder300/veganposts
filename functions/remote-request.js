@@ -1,4 +1,7 @@
 export async function onRequest(context) {
-    const response = await fetch(context.params.url)
+    const { searchParams } = new URL(context.url)
+    const url = searchParams.get('url')
+
+    const response = await fetch(url)
     return new Response(response.text())
 }

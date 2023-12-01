@@ -14,6 +14,12 @@
             * {
                 font-family: Arial, Helvetica, sans-serif;
             }
+            .error {
+                color: red;
+            }
+            .errors {
+                margin-bottom: 15px;
+            }
             .post {
                 display: flex;
                 margin-bottom: 15px;
@@ -70,6 +76,9 @@
             .proveg {
                 background: #147c3f;
             }
+            .vegannews {
+                background: #48aa96;
+            }
 
             @media (max-width: 500px) {
                 .post {
@@ -102,6 +111,7 @@
             function load(){
                 ajaxCalls = []
                 posts = [];
+                errorSites = [];
 
                 // Komische Reddit API ohne Auth anzapfen
                 ["vegande", "veganat"].forEach(community => {
@@ -110,9 +120,10 @@
                             url: "https://www.reddit.com/r/" + community + "/new.json?sort=new&limit=30",
                             type: 'GET',
                             dataType: 'json',
+                            timeout: 5000,
                             success: function(res) {
+                                console.log("Reddit " + community)
                                 console.log(res)
-                                console.log(community);
                                 res['data']['children'].forEach(post => {
                                     posts.push({
                                         site: "Reddit" + (community != "vegande" ? " " + capitalizeFirstLetter(community) : ""),
@@ -125,6 +136,8 @@
                                         comments: post['data']['num_comments']
                                     })
                                 });
+                            }, error: function(){
+                                errorSites.push("Reddit " + community)
                             }
                         })
                     );
@@ -137,7 +150,9 @@
                             url: "https://feddit.de/api/v3/post/list?community_name=" + community + "&sort=New&limit=30",
                             type: 'GET',
                             dataType: 'json',
+                            timeout: 5000,
                             success: function(res) {
+                                console.log("Feddit " + community)
                                 console.log(res)
                                 res['posts'].forEach(post => {
                                     posts.push({
@@ -151,6 +166,8 @@
                                         comments: post['counts']['comments']
                                     })
                                 });
+                            }, error: function(){
+                                errorSites.push("Feddit " + community)
                             }
                         })
                     );
@@ -160,11 +177,14 @@
                 // Hier wird der News-RSS-Feed geparsed. Leider sind da die URLs zu den Thumbnails nicht mit drin.
                 ajaxCalls.push(
                     $.ajax({
-                        //url: "remote-request.php?url=https%3A%2F%2Fvegpool.de%2Ffeeds%2Frss_news.xml",
+                        //url: "functions/remote-request.php?url=https%3A%2F%2Fvegpool.de%2Ffeeds%2Frss_news.xml",
                         url: "remote-request?url=https%3A%2F%2Fvegpool.de%2Ffeeds%2Frss_news.xml",
                         type: 'GET',
                         dataType: 'xml',
+                        timeout: 5000,
                         success: function(res) {
+                            console.log("Vegpool")
+                            console.log(res)
                             $(res).find('item').each(function(){
                                 posts.push({
                                     site: "Vegpool",
@@ -177,6 +197,8 @@
                                     comments: null
                                 })
                             })
+                        }, error: function(){
+                            errorSites.push("Vegpool")
                         }
                     })
                 );
@@ -185,11 +207,14 @@
                 // Hier wird das HTML von der Infoseite geparsed
                 ajaxCalls.push(
                     $.ajax({
-                        //url: "remote-request.php?url=https%3A%2F%2Fwww.vegan.at%2Finfocenter",
+                        //url: "functions/remote-request.php?url=https%3A%2F%2Fwww.vegan.at%2Finfocenter",
                         url: "remote-request?url=https%3A%2F%2Fwww.vegan.at%2Finfocenter",
                         type: 'GET',
                         dataType: "html",
+                        timeout: 5000,
                         success: function(res) {
+                            console.log("Vegan.at")
+                            console.log(res)
                             $(res).find('.views-row').each(function(){
                                 posts.push({
                                     site: "Vegan.at",
@@ -202,18 +227,25 @@
                                     comments: null
                                 })
                             })
+                        }, error: function(){
+                            errorSites.push("Vegan.at")
                         }
                     })
                 );
 
                 // Hier werden Wordpress REST APIs gefetched. _embed damit man an die Thumbnail URLs rankommt.
-                [{url: "vegconomist.de", name: "Vegconomist"}, {url: "www.peta.de", name: "Peta"}, {url: "proveg.com/de", name: "Proveg"}].forEach(site => {
+                [{url: "vegconomist.de", name: "Vegconomist"}, 
+                {url: "www.peta.de", name: "Peta"}, 
+                {url: "proveg.com/de", name: "Proveg"},
+                {url: "vegan-news.de", name: "VeganNews"}].forEach(site => {
                     ajaxCalls.push(
                         $.ajax({
                             url: "https://" + site.url + "/wp-json/wp/v2/posts?_embed",
                             type: 'GET',
                             dataType: 'json',
+                            timeout: 5000,
                             success: function(res) {
+                                console.log(site.name)
                                 console.log(res)
                                 res.forEach(post => {
                                     posts.push({
@@ -227,18 +259,30 @@
                                         comments: null
                                     })
                                 });
+                            }, error: function(){
+                                errorSites.push(site.name)
                             }
                         })
                     );
                 });
 
                 // Wenn alle asynchronen Requests abgeschlossen sind -> HTML zusammenbauen
-                $.when.apply($, ajaxCalls).then(function(){
+                Promise.allSettled(ajaxCalls).then(function(){
                     posts.sort((a, b) => b.time - a.time);
                     console.log("Geladen")
                     console.log(posts)
 
                     $("body").html("")
+                    if (errorSites.length > 0){
+                        $("body").append("<div class='errors'></div>")
+                    }
+                    errorSites.forEach(errorSite => {
+                        $(".errors").append(`
+                            <div class="error">
+                                Daten von <b>` + errorSite + `</b> konnten nicht abgerufen werden, versuche die Seite neu zu laden
+                            </div>
+                        `)
+                    })
                     posts.forEach(post => {
                         $("body").append(`
                             <div class="post">

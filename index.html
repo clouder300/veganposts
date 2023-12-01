@@ -160,7 +160,8 @@
                 // Hier wird der News-RSS-Feed geparsed. Leider sind da die URLs zu den Thumbnails nicht mit drin.
                 ajaxCalls.push(
                     $.ajax({
-                        url: "remote-request.php?url=https%3A%2F%2Fvegpool.de%2Ffeeds%2Frss_news.xml",
+                        //url: "remote-request.php?url=https%3A%2F%2Fvegpool.de%2Ffeeds%2Frss_news.xml",
+                        url: "remote-request?url=https%3A%2F%2Fvegpool.de%2Ffeeds%2Frss_news.xml",
                         type: 'GET',
                         dataType: 'xml',
                         success: function(res) {

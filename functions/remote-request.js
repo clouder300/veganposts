@@ -1,7 +1,14 @@
+// Cloudflare Pages Function
 export async function onRequest(context) {
-    const { searchParams } = new URL(context.url)
-    const url = decodeURI(searchParams.get('url'))
+    const { searchParams } = new URL(context.request.url)
+    const url = searchParams.get('url')
 
-    const response = await fetch(url)
-    return new Response(response.text())
+    if (url.startsWith("https://vegpool.de") || url.startsWith("https://www.vegan.at")){
+        const response = await fetch(url)
+        const text = await response.text()
+        return new Response(text)
+    } else {
+        return new Response("Fehler")
+    }
+    
 }

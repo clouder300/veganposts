@@ -57,9 +57,11 @@
             }
             .reddit {
                 background: #ff4500 !important;
+                isolation: isolate; /* Darkmode ignorieren */
             }
             .feddit {
                 background: #a32ca7;
+                isolation: isolate; /* Darkmode ignorieren */
             }
             .vegpool {
                 background: #80cc28;
@@ -96,17 +98,29 @@
             }
         </style>
 
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: 15px; display: block; shape-rendering: auto;" width="200px" height="200px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+        <svg class="loading-animation" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: 15px; display: block; shape-rendering: auto;" width="200px" height="200px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
             <circle cx="50" cy="50" r="32" stroke-width="5" stroke="#93dbe9" stroke-dasharray="50.26548245743669 50.26548245743669" fill="none" stroke-linecap="round">
             <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" keyTimes="0;1" values="0 50 50;360 50 50"></animateTransform>
             </circle>
         </svg>
     </head>
     <body>
+        <div class="posts"></div>
+
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment-with-locales.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/darkmode-js@1.5.7/lib/darkmode-js.min.js"></script>
         <script>
             moment.locale('de');
+
+            // Darkmode
+            const options = {
+                label: '🌓'
+            }
+            function addDarkmodeWidget() {
+                new Darkmode(options).showWidget();
+            }
+            window.addEventListener('load', addDarkmodeWidget);
 
             function load(){
                 ajaxCalls = []
@@ -272,19 +286,20 @@
                     console.log("Geladen")
                     console.log(posts)
 
-                    $("body").html("")
+                    $(".loading-animation").hide()
+                    $(".posts").html("")
                     if (errorSites.length > 0){
-                        $("body").append("<div class='errors'></div>")
+                        $(".posts").append("<div class='errors'></div>")
                     }
                     errorSites.forEach(errorSite => {
                         $(".errors").append(`
                             <div class="error">
-                                Daten von <b>` + errorSite + `</b> konnten nicht abgerufen werden, versuche die Seite neu zu laden
+                                Daten von <b>` + errorSite + `</b> konnten nicht abgerufen werden, versuche die Seite neu zu laden (Könnte aber auch an Privatsphäre-Einstellungen oder einer Browser-Erweiterung liegen)
                             </div>
                         `)
                     })
                     posts.forEach(post => {
-                        $("body").append(`
+                        $(".posts").append(`
                             <div class="post">
                                 <div class="img` + (post.thumbnail == undefined || !post.thumbnail.startsWith("http") ? " noimg" : "") + `">
                                     ` + (post.thumbnail != undefined && post.thumbnail.startsWith("http") ? `

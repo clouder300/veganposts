@@ -11,7 +11,7 @@ Zeigt neueste Posts und Nachrichten verschiedener Quellen an, mehr kann leicht d
 **Proveg**<br>
 **VeganNews**<br>
 
-Die Seite aktualisiert sich alle 3 Minuten automatisch und ist responsiv.
+Die Seite aktualisiert sich alle 3 Minuten automatisch, hat einen Darkmode und ist responsiv.
 
 ![Bild der Veganposts Seite](img.png)
 
@@ -21,7 +21,7 @@ Die Seite aktualisiert sich alle 3 Minuten automatisch und ist responsiv.
 
 ## Selbst hosten
 
-Kann easy selbst gehostet werden, da primär nur die `index.html` relevant ist. Die HTTP Requests an die Quellen macht der Client selbst per Javascript (jQuery und Moment.js wird von CDNs geladen). 
+Kann easy selbst gehostet werden, da primär nur die `index.html` relevant ist. Die HTTP Requests an die Quellen macht der Client selbst per Javascript. 
 
 Nur für die Fälle, bei denen CORS umgangen werden muss, ist ein Backend zwischengeschaltet. Dazu findet sich im functions-Ordner minimaler Code für Cloudflare Pages Functions. Und ein PHP-Beispiel.
 

@@ -171,7 +171,7 @@
                                 res['posts'].forEach(post => {
                                     posts.push({
                                         site: "Feddit" + (community != "vegan" ? " " + capitalizeFirstLetter(community) : ""),
-                                        time: new Date(post['post']['published'] + "+00:00").getTime(),
+                                        time: new Date(post['post']['published']).getTime(),
                                         text: post['post']['body'],
                                         title: post['post']['name'],
                                         thumbnail: post['post']['thumbnail_url'],

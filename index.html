@@ -230,16 +230,20 @@
                             console.log("Vegan.at")
                             console.log(res)
                             $(res).find('.views-row').each(function(){
-                                posts.push({
-                                    site: "Vegan.at",
-                                    time: parseGermanDate($(this).find(".pane-node-created").text()).getTime(),
-                                    text: $(this).find(".field--type-text-with-summary").text(),
-                                    title: $(this).find("h1").text(),
-                                    thumbnail: $(this).find("img").attr("src"),
-                                    link: "https://vegan.at" + $(this).find("a").attr("href"),
-                                    score: null,
-                                    comments: null
-                                })
+                                var time = parseGermanDate($(this).find(".pane-node-created").text()).getTime()
+                                // Vegan.at gibt als Veröffentlichungsdatum teilweise etwas an, was in der Zukunft liegt...
+                                if (time < new Date().getTime()){
+                                    posts.push({
+                                        site: "Vegan.at",
+                                        time: time,
+                                        text: $(this).find(".field--type-text-with-summary").text(),
+                                        title: $(this).find("h1").text(),
+                                        thumbnail: $(this).find("img").attr("src"),
+                                        link: "https://vegan.at" + $(this).find("a").attr("href"),
+                                        score: null,
+                                        comments: null
+                                    })
+                                }
                             })
                         }, error: function(){
                             errorSites.push("Vegan.at")

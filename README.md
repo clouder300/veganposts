@@ -26,3 +26,5 @@ Kann easy selbst gehostet werden, da primär nur die `index.html` relevant ist. 
 Nur für die Fälle, bei denen CORS umgangen werden muss, ist ein Backend zwischengeschaltet. Dazu findet sich im functions-Ordner minimaler Code für Cloudflare Pages Functions. Und ein PHP-Beispiel.
 
 Die package.json hat `wrangler` um Cloudflare Pages lokal zu testen.
+
+Einen lokalen dev-Server kann man per `npx wrangler pages dev .` starten.

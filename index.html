@@ -63,6 +63,10 @@
                 background: #a32ca7;
                 isolation: isolate; /* Darkmode ignorieren */
             }
+            .tchncs {
+                background: #a32ca7;
+                isolation: isolate; /* Darkmode ignorieren */
+            }
             .vegpool {
                 background: #80cc28;
             }
@@ -182,6 +186,36 @@
                                 });
                             }, error: function(){
                                 errorSites.push("Feddit " + community)
+                            }
+                        })
+                    );
+                });
+
+                // tchncs API
+                ["vegande", "kreisvegs"].forEach(community => {
+                    ajaxCalls.push(
+                        $.ajax({
+                            url: "https://discuss.tchncs.de/api/v3/post/list?community_name=" + community + "&sort=New&limit=30",
+                            type: 'GET',
+                            dataType: 'json',
+                            timeout: 5000,
+                            success: function(res) {
+                                console.log("tchncs " + community)
+                                console.log(res)
+                                res['posts'].forEach(post => {
+                                    posts.push({
+                                        site: "tchncs" + (community != "vegande" ? " " + capitalizeFirstLetter(community) : ""),
+                                        time: new Date(post['post']['published']).getTime(),
+                                        text: post['post']['body'],
+                                        title: post['post']['name'],
+                                        thumbnail: post['post']['thumbnail_url'],
+                                        link: "https://discuss.tchncs.de/post/" + post['post']['id'],
+                                        score: post['counts']['score'],
+                                        comments: post['counts']['comments']
+                                    })
+                                });
+                            }, error: function(){
+                                errorSites.push("tchncs " + community)
                             }
                         })
                     );

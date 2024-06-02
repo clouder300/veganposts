@@ -4,6 +4,7 @@ Zeigt neueste Posts und Nachrichten verschiedener Quellen an, mehr kann leicht d
 
 **Reddit**: r/veganDE, r/veganAT<br>
 **Feddit**: vegan, kreisvegs<br>
+**tchncs**: vegande, kreisvegs<br>
 **Vegpool**<br>
 **Vegan.at**<br>
 **Vegconomist**<br>

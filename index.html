@@ -135,7 +135,7 @@
                 ["vegande", "veganat"].forEach(community => {
                     ajaxCalls.push(
                         $.ajax({
-                            url: "remote-request?url=https://www.reddit.com/r/" + community + "/new.json?sort=new&limit=30",
+                            url: "https://www.reddit.com/r/" + community + "/new.json?sort=new&limit=30",
                             type: 'GET',
                             dataType: 'json',
                             timeout: 5000,

@@ -4,7 +4,7 @@ export async function onRequest(context) {
     const { searchParams } = new URL(context.request.url)
     const url = searchParams.get('url')
 
-    if (url.startsWith("https://vegpool.de") || url.startsWith("https://www.vegan.at") || url.startsWith("https://www.reddit.com")){
+    if (url.startsWith("https://vegpool.de") || url.startsWith("https://www.vegan.at")){
         return await fetch(url, { signal: AbortSignal.timeout(5000) })
     } else {
         return new Response("Fehler", {status: 400})
